@@ -14,22 +14,6 @@ router = APIRouter(
     prefix="/chat",
     tags=["Chat"])
 
-@router.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int):
-    await manager.connect(websocket, client_id)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            message_data = json.loads(data) 
-            receiver_id = message_data['recipient_id']
-            message = message_data['content']
-            await manager.send_private_message(data, receiver_id)
-            # await manager.send_message(f"You wrote {data}", websocket)
-            # await manager.broadcast(f"Client #{client_id} says: {data}")
-    except WebSocketDisconnect:
-        await manager.disconnect(websocket)
-        #await manager.broadcast(f"Client #{client_id} left the chat")
-
 
 @router.post("/messages/")
 async def create_message(
@@ -47,3 +31,21 @@ async def get_users(db: AsyncSession = Depends(get_async_session)):
 @router.get("/me/")
 async def get_me(sender: User = Depends(current_active_user)):
     return {'id': sender.id, 'email': sender.email}
+
+@router.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int, db: AsyncSession = Depends(get_async_session)):
+    await manager.connect(websocket, client_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            message_data = json.loads(data) 
+            receiver_id = message_data['recipient_id']
+            await add_message(
+                db=db, 
+                sender_id=client_id, 
+                recipient_id=receiver_id, 
+                content=message_data['content']
+            )
+            await manager.send_private_message(data, receiver_id)
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket)

@@ -1,5 +1,6 @@
 from fastapi import WebSocket
-
+from .celery.tasks import notify_user
+import json
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[int, WebSocket] = {}
@@ -8,8 +9,6 @@ class ConnectionManager:
         await websocket.accept()
         self.active_connections[user_id] = websocket
 
-    # def disconnect(self, websocket: WebSocket):
-        # self.active_connections.remove(websocket)
     async def disconnect(self, user_id: int):
         if user_id in self.active_connections:
             del self.active_connections[user_id]
@@ -21,13 +20,10 @@ class ConnectionManager:
         receiver_socket = self.active_connections.get(receiver_id)
         if receiver_socket:
             await receiver_socket.send_text(message)
-
-    #async def broadcast(self, message: str):
-    #    for connection in self.active_connections:
-    #        await connection.send_text(message)
-
-    # async def get_active_connections(self):
-    #     return self.active_connections
+        #else:
+        #    message = json.loads(message)
+        #    print(f"{message['content']}")
+        #    notify_user.delay(id, message['content'])
 
 
 manager = ConnectionManager()

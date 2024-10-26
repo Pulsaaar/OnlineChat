@@ -1,6 +1,12 @@
 from fastapi import WebSocket
-from .celery.tasks import notify_user
 import json
+# from aiogram import Bot
+# from config import API_TOKEN
+
+# API_TOKEN = API_TOKEN 
+# bot = Bot(token=API_TOKEN)
+
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[int, WebSocket] = {}
@@ -20,10 +26,9 @@ class ConnectionManager:
         receiver_socket = self.active_connections.get(receiver_id)
         if receiver_socket:
             await receiver_socket.send_text(message)
-        #else:
-        #    message = json.loads(message)
-        #    print(f"{message['content']}")
-        #    notify_user.delay(id, message['content'])
+        # else:
+        #     message = json.loads(message)
+        #     await bot.send_message("@Pulsaar", message['content'])
 
 
 manager = ConnectionManager()

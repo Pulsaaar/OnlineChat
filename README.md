@@ -8,7 +8,7 @@
 - [ ] Обновить таблицу пользоватей, добавив поле "telegram id" 
 
 ## Set up environment variables
-# Example:
+### Example:
 ```
 DB_HOST=localhost
 DB_PORT=5432

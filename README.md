@@ -7,6 +7,18 @@
 - [ ] Отправка сообщений через телеграм
 - [ ] Обновить таблицу пользоватей, добавив поле "telegram id" 
 
+## Set up environment variables
+# Example:
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=chat
+DB_USER=postgres
+DB_PASS=postgres
+AUTH_SECRET=5SpxMnjOUeT4zTLKmikTSoovwMY6NbfDyNY6CNUGLsU
+VER_SECRET=ESxXRfHQGfZcWiau83TrGtk0R43NaQUOSMJX6qKtT0E
+```
+
 ## Installation
 ```
 pip install -r chatLogic/requirements.txt   

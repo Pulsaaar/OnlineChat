@@ -8,22 +8,27 @@ import {
   MDBInput
 } from 'mdb-react-ui-kit';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from './AuthContext';;
+import { useAuth } from './AuthContext';
+
+const apiUrl = "http://localhost:8000";
 
 function App() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // добавлено состояние для ошибки
   const { saveToken } = useAuth();
 
   const handleRegisterRedirect = () => {
-    navigate('/register'); // Переход к компоненту регистрации
+    navigate('/register');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // сброс ошибки при новом запросе
+
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/login', {
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -33,14 +38,14 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error('Login failed');
+        throw new Error('Invalid email or password');
       }
 
       const data = await response.json();
-      saveToken(data.access_token); // Сохранение токена (создайте функцию saveToken или используйте локальное хранилище)
-      navigate('/'); // Перенаправление на главную страницу после успешного входа
+      saveToken(data.access_token); // сохранение токена
+      navigate('/'); // переход на главную страницу
     } catch (error) {
-      console.error('Login failed:', error);
+      setError("Invalid email or password"); // установка сообщения об ошибке для пользователя
     }
   };
 
@@ -83,6 +88,14 @@ function App() {
             >
               Login
             </MDBBtn>
+
+            {/* Отображение сообщения об ошибке */}
+            {error && (
+              <div className="text-danger text-center mx-5 mb-4">
+                {error}
+              </div>
+            )}
+
             <p className='ms-5'>
               Don't have an account? <span onClick={handleRegisterRedirect} style={{ cursor: 'pointer', color: 'blue' }}>Register here</span>
             </p>

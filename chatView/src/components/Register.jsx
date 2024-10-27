@@ -9,11 +9,13 @@ import {
 } from 'mdb-react-ui-kit';
 import { useNavigate } from 'react-router-dom';
 
+const apiUrl = "http://localhost:8000";
+
 function Register() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
+  const [telegram_id, setTgId] = useState('');
 
   const handleLoginRedirect = () => {
     navigate('/login'); // Переход к компоненту входа
@@ -22,7 +24,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://127.0.0.1:8000/auth/register', {
+      const response = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,7 +32,7 @@ function Register() {
         body: JSON.stringify({
           email,
           password,
-          username,
+          telegram_id,
           is_active: true,
           is_superuser: false,
           is_verified: false
@@ -70,12 +72,12 @@ function Register() {
             />
             <MDBInput
               wrapperClass='mb-4 mx-5 w-100'
-              label='Username'
-              id='username'
+              label='telegram_id'
+              id='telegram_id'
               type='text'
               size="lg"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={telegram_id}
+              onChange={(e) => setTgId(e.target.value)}
             />
             <MDBInput
               wrapperClass='mb-4 mx-5 w-100'

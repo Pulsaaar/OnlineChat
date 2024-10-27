@@ -1,11 +1,7 @@
 from fastapi import WebSocket
 import json
-# from aiogram import Bot
-# from config import API_TOKEN
-
-# API_TOKEN = API_TOKEN 
-# bot = Bot(token=API_TOKEN)
-
+from celery_app import send_message_task
+from .messages.db_worker import get_user_by_id, add_message
 
 class ConnectionManager:
     def __init__(self):
@@ -15,20 +11,34 @@ class ConnectionManager:
         await websocket.accept()
         self.active_connections[user_id] = websocket
 
-    async def disconnect(self, user_id: int):
-        if user_id in self.active_connections:
-            del self.active_connections[user_id]
+    async def disconnect(self, websocket: WebSocket):
+        for user_id, connection in self.active_connections.items():
+            if connection == websocket:
+                del self.active_connections[user_id]
+                break
+        
 
     async def send_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
-    async def send_private_message(self, message: str, receiver_id: int):
+    async def send_private_message(self, message: str):
+        message_data = json.loads(message) 
+        sender_id = message_data['sender_id']
+        receiver_id = message_data['recipient_id']
+        content = message_data['content']
         receiver_socket = self.active_connections.get(receiver_id)
+
+        await add_message(
+               sender_id=sender_id, 
+               recipient_id=receiver_id, 
+               content=content
+            )
+
         if receiver_socket:
             await receiver_socket.send_text(message)
-        # else:
-        #     message = json.loads(message)
-        #     await bot.send_message("@Pulsaar", message['content'])
+        else:
+            user = await get_user_by_id(receiver_id)
+            send_message_task.delay(user.telegram_id, f"{user.email}: {content}")
 
 
 manager = ConnectionManager()

@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - net
+
+  celery:
+    build:
+     context: ./chatLogic
+    command: celery -A celery_app worker --loglevel=info
+    environment:
+      REDIS_URL: redis:6379
+    volumes:
+      - ./chatLogic:/app
+    depends_on:
+      - redis
+    restart: always
+    networks:
+      - net
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - net
+
+  logic:
+    build:
+      context: ./chatLogic
+      dockerfile: Dockerfile
+    container_name: logic
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: chat
+      DB_USER: postgres
+      DB_PASS: postgres
+      AUTH_SECRET: 5SpxMnjOUeT4zTLKmikTSoovwMY6NbfDyNY6CNUGLsU
+      VER_SECRET: ESxXRfHQGfZcWiau83TrGtk0R43NaQUOSMJX6qKtT0E
+      API_TOKEN: YOUR_BOT_TELEGRAM_TOKEN
+      REDIS_URL: redis:6379
+    depends_on:
+      - postgres
+      - redis
+      - celery
+    ports:
+      - "8000:8000"
+    networks:
+      - net
+
+
+
+  view:
+    build:
+      context: ./chatView
+      dockerfile: Dockerfile
+    container_name: view
+    ports:
+      - "3000:3000"
+    networks:
+      - net
+
+volumes:
+  postgres_data:
+
+networks:
+  net:

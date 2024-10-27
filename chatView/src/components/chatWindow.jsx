@@ -13,6 +13,8 @@ import {
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const apiUrl = "http://localhost:8000";
+
 export default function App() {
   const navigate = useNavigate();
   const [me, setMe] = useState(null);
@@ -45,22 +47,19 @@ export default function App() {
   };
 
   useEffect(() => {
-    async function fetchUsers() {
-      const response = await fetch("http://localhost:8000/chat/users");
-      const data = await response.json();
-      setUsers(data);
-
-      const response_me = await fetch("http://localhost:8000/chat/me", {
+    async function fetchUsersAndMe() {
+      const response = await fetch(`${apiUrl}/chat/users/me`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
       });
-      const data_me = await response_me.json();
-      setMe(data_me);
+      const data = await response.json();
+      setMe(data.me);
+      setUsers(data.users);
     }
-    fetchUsers();
-  }, []);
+    fetchUsersAndMe();
+  }, [token]);
 
   useEffect(() => {
     if (me) {
@@ -82,11 +81,11 @@ export default function App() {
     if (selectedUser) {
       async function fetchMessages() {
         const response = await fetch(
-          `http://localhost:8000/messages/?recipient_id=${selectedUser.id}`,
+          `${apiUrl}/chat/messages/?recipient_id=${selectedUser.id}`,
           {
             method: 'GET',
             headers: {
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${token}`,
             },
           }
         );
@@ -105,7 +104,6 @@ export default function App() {
     saveToken(null);
   };
 
-
   return (
     <MDBContainer fluid className="py-5" style={{ backgroundColor: "#eee", height: "100vh" }}>
       <MDBRow>
@@ -122,7 +120,7 @@ export default function App() {
                     onClick={() => handleUserClick(user)}
                   >
                     <div className="d-flex justify-content-between pt-1">
-                      <p className="fw-bold mb-0">{user.username}</p>
+                      <p className="fw-bold mb-0">{user.email}</p>
                     </div>
                   </li>
                 ))}
@@ -148,7 +146,7 @@ export default function App() {
               >
                 <MDBCard className="w-75">
                   <MDBCardHeader className="d-flex justify-content-between p-3">
-                    <p className="fw-bold mb-0">{message.sender_id === selectedUser?.id ? selectedUser.username : "You"}</p>
+                    <p className="fw-bold mb-0">{message.sender_id === selectedUser?.id ? selectedUser.email : "You"}</p>
                   </MDBCardHeader>
                   <MDBCardBody>
                     <p className="mb-0">{message.content}</p>

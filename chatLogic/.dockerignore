@@ -12,7 +12,7 @@ venv/
 .env
 
 .vscode
-
+.dockerignore
 # Игнорируем файлы сборки React
 build/
 node_modules/

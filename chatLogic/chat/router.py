@@ -1,51 +1,58 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from starlette.requests import Request
 from .conn_manager import manager
 from auth.auth_back import current_active_user
-from auth.database import get_async_session
-from sqlalchemy.ext.asyncio import AsyncSession
 from models import User
-from chat.messages.db_worker import *
+from auth.database import get_async_session
+from celery_app import send_message_task
+from sqlalchemy.ext.asyncio import AsyncSession
 import json
+from .messages.db_worker import get_all_user_ids_and_usernames
+from .messages.router import router as router_msg 
 
+# Создаем основной маршрутизатор для чата с префиксом "/chat"
 router = APIRouter(
     prefix="/chat",
-    tags=["Chat"])
+    tags=["Chat"]
+)
 
+# Включаем маршруты для сообщений
+router.include_router(router_msg)
 
-@router.post("/messages/")
-async def create_message(
-    recipient_id: int, content: str, sender: User = Depends(current_active_user), db: AsyncSession = Depends(get_async_session)
+@router.get("/users/me/")
+async def get_users_and_me(
+    db: AsyncSession = Depends(get_async_session), 
+    sender: User = Depends(current_active_user)
 ):
-    new_message = await add_message(db, sender.id, recipient_id, content)
-    return {"message_id": new_message.id, "content": new_message.content}
-
-
-@router.get("/users/")
-async def get_users(db: AsyncSession = Depends(get_async_session)):
-    new_message = await get_all_user_ids_and_usernames(db)
-    return [{"id": user_id, "username": username} for user_id, username in new_message]
-
-@router.get("/me/")
-async def get_me(sender: User = Depends(current_active_user)):
-    return {'id': sender.id, 'email': sender.email}
+    """
+    Получаем данные текущего пользователя и список всех пользователей.
+    """
+    # Получаем идентификаторы и email всех пользователей
+    users = await get_all_user_ids_and_usernames(db, sender.id)
+    
+    # Формируем данные для текущего пользователя
+    me_data = {"id": sender.id, "email": sender.email}
+    
+    return {
+        "me": me_data,
+        "users": [{"id": user_id, "email": email} for user_id, email in users]
+    }
 
 @router.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int, db: AsyncSession = Depends(get_async_session)):
-    await manager.connect(websocket, client_id)
+async def websocket_endpoint(
+    websocket: WebSocket, 
+    client_id: int, 
+    db: AsyncSession = Depends(get_async_session)
+):
+    """
+    Обрабатываем подключение к WebSocket для отправки и получения сообщений.
+    """
+    await manager.connect(websocket, client_id)  # Подключаем клиента
     try:
         while True:
+            # Получаем данные от клиента
             data = await websocket.receive_text()
-            message_data = json.loads(data) 
-            receiver_id = message_data['recipient_id']
-            await add_message(
-                db=db, 
-                sender_id=client_id, 
-                recipient_id=receiver_id, 
-                content=message_data['content']
-            )
-            await manager.send_private_message(data, receiver_id)
+            
+            # Отправляем личное сообщение получателю
+            await manager.send_private_message(data)
     except WebSocketDisconnect:
-        await manager.disconnect(websocket)
+        await manager.disconnect(websocket)  # Отключаем клиента при разрыве соединения

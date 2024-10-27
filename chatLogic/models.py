@@ -9,7 +9,7 @@ class Base(DeclarativeBase):
 
 class User(SQLAlchemyBaseUserTable[int], Base):
     __tablename__ = 'user'  # Добавляем имя таблицы
-    username: Mapped[str] = mapped_column(String, nullable=False)
+    telegram_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
 class Message(Base):
     __tablename__ = 'message'

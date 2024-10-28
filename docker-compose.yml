@@ -47,7 +47,7 @@ services:
       DB_PASS: postgres
       AUTH_SECRET: 5SpxMnjOUeT4zTLKmikTSoovwMY6NbfDyNY6CNUGLsU
       VER_SECRET: ESxXRfHQGfZcWiau83TrGtk0R43NaQUOSMJX6qKtT0E
-      API_TOKEN: 7919252479:AAHrzN_I7o_yxoUa03I5sr2_nM6HrW6vMOg
+      API_TOKEN: YOUR_TELEGRAM_BOT_TOKEN
       REDIS_URL: redis:6379
     depends_on:
       - postgres

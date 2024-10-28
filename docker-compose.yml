@@ -15,12 +15,12 @@ services:
 
   celery:
     build:
-     context: ./chatLogic
+     context: ./api
     command: celery -A celery_app worker --loglevel=info
     environment:
       REDIS_URL: redis:6379
     volumes:
-      - ./chatLogic:/app
+      - ./api:/app
     depends_on:
       - redis
     restart: always
@@ -36,7 +36,7 @@ services:
 
   logic:
     build:
-      context: ./chatLogic
+      context: ./api
       dockerfile: Dockerfile
     container_name: logic
     environment:
@@ -60,7 +60,7 @@ services:
 
   view:
     build:
-      context: ./chatView
+      context: ./ui
       dockerfile: Dockerfile
     container_name: view
     ports:

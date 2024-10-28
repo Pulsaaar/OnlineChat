@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
-from auth.auth_back import current_active_user
-from auth.database import get_async_session
+from auth.authentication import current_active_user
+from db.database import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
-from models import User
-from .db_worker import add_message, get_messages_between_users
+from db.models import User
+from db.workers.db_message import add_message, get_messages_between_users
 
 # Создаем маршрутизатор для работы с сообщениями
 router = APIRouter(
@@ -15,7 +15,6 @@ async def create_message(
     recipient_id: int, 
     content: str, 
     sender: User = Depends(current_active_user), 
-    db: AsyncSession = Depends(get_async_session)
 ):
     """
     Создаем новое сообщение.
@@ -27,7 +26,7 @@ async def create_message(
     :return: Словарь с идентификатором сообщения и его содержимым
     """
     # Добавляем сообщение в базу данных
-    new_message = await add_message(db, sender.id, recipient_id, content)
+    new_message = await add_message(sender.id, recipient_id, content)
     
     # Возвращаем информацию о созданном сообщении
     return {"message_id": new_message.id, "content": new_message.content}

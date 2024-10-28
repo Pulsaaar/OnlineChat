@@ -47,7 +47,7 @@ services:
       DB_PASS: postgres
       AUTH_SECRET: 5SpxMnjOUeT4zTLKmikTSoovwMY6NbfDyNY6CNUGLsU
       VER_SECRET: ESxXRfHQGfZcWiau83TrGtk0R43NaQUOSMJX6qKtT0E
-      API_TOKEN: YOUR_BOT_TELEGRAM_TOKEN
+      API_TOKEN: 7919252479:AAHrzN_I7o_yxoUa03I5sr2_nM6HrW6vMOg
       REDIS_URL: redis:6379
     depends_on:
       - postgres
@@ -58,8 +58,6 @@ services:
     networks:
       - net
 
-
-
   view:
     build:
       context: ./chatView
@@ -67,6 +65,21 @@ services:
     container_name: view
     ports:
       - "3000:3000"
+    depends_on:
+      - logic
+    networks:
+      - net
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - view
+      - logic
     networks:
       - net
 

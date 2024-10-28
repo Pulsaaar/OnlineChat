@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .auth_back import auth_backend, fastapi_users
+from .authentication import auth_backend, fastapi_users
 from .schemas import UserCreate, UserRead
 
 # Создаем маршрутизатор для аутентификации

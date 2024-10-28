@@ -1,7 +1,8 @@
 from fastapi import WebSocket
 import json
 from celery_app import send_message_task
-from .messages.db_worker import get_user_by_id, add_message
+from db.workers.db_user import get_user_by_id
+from db.workers.db_message import add_message
 
 class ConnectionManager:
     def __init__(self):
